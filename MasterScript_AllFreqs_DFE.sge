@@ -1,0 +1,108 @@
+#!/bin/bash
+# Use current working directory
+#$ -cwd
+#
+# Join stdout and stderr
+#$ -j y
+#
+# Run job through bash shell
+#$ -S /bin/bash
+#
+#You can edit the scriptsince this line
+#
+# Your job name
+#$ -N Arboles_DFE
+#
+# Send an email after the job has finished
+# -m e
+# -M alanizarraras3@gmail.com
+#
+# If modules are needed, source modules environment (Do not delete the next line):
+
+#
+# Add any modules you might require:
+
+#
+# Write your commands in the next line
+
+#Valores de varialbes para paralelizar corridas. Se basa en el valor de TaskID para hacer un cambio de seleccion o frecuencia final del alelo. 
+
+SeedName=$(( $SGE_TASK_ID % 100000 ))
+##ValorSeleccion=$(( $SGE_TASK_ID / 100000 + 1 ))
+## ValorFrecuencia=$(( $SeedName / 1000 ))
+
+echo La semilla aleatoria es ${SeedName}
+##echo El identificador de seleccion es ${ValorSeleccion}
+##echo El valor de frecuencia es ${ValorFrecuencia}
+
+# Set the number of the random seed.
+
+RANDOM_SEED=${SeedName}
+
+### This is the default sample size in PReFerSim. You can change this value if you want with the option n in the parameter file before running PReFerSim.
+
+Sample_size=100
+##DerivedAlleleNumber=$(($ValorFrecuencia))
+
+echo El arbol consta de $DerivedAlleleNumber linajes derivados y 1 linaje ancestral
+
+# First run of PReFerSim. You must set the PrintSegSiteInfo parameter to 1 to produce an outfile
+
+GSL_RNG_SEED=$RANDOM_SEED GSL_RNG_TYPE=mrg /mnt/Timina/dortega/aizarraraz/PRF/PReFerSim-master/./fwd_seldist_gsl_2012_4epoch.debug ParameterFiles/DFE/ParamFile_DFE1.txt $SGE_TASK_ID 
+
+##echo Se está usando el archivo: frq${ValorFrecuencia} y ParamFile_Sel${ValorSeleccion}.txt
+
+# Run perl script to extract out the allele IDs of variants that have the frequency you are interested in.
+
+NombreArbol="/mnt/Timina/dortega/aizarraraz/PRF/Results/MasterRun/trees_"${SGE_TASK_ID}".txt"
+rm $NombreArbol
+touch $NombreArbol
+
+for ValorFrecuencia in {2..99} #0 a 97. Nop, aqui debio ser del 2 al 99 porque frecuencia ya no es una matriz ahora es esa serie de nums
+do
+DerivedAlleleNumber=$(($ValorFrecuencia))
+
+if [ $ValorFrecuencia -le 9 ];
+then ValorFrecuencia="0${ValorFrecuencia}"
+cat "ValorFrecuencia equivale a: $ValorFrecuencia"
+fi
+
+perl /mnt/Timina/dortega/aizarraraz/PRF/PReFerSim-master/GetListOfRunsWhereFrequencyMatches.pl 0.${ValorFrecuencia} 0.${ValorFrecuencia} MegaRun/Output.$SGE_TASK_ID.full_out.txt MegaRun/Alleles_$SGE_TASK_ID.txt  
+ 
+# Second run of PReFerSim. This takes the list of allele IDs you want trajectories for  and re-runs PReFerSim.
+
+GSL_RNG_SEED=$RANDOM_SEED GSL_RNG_TYPE=mrg /mnt/Timina/dortega/aizarraraz/PRF/PReFerSim-master/./fwd_seldist_gsl_2012_4epoch.debug ParameterFiles/DFE/ParamFile_b_DFE1.txt $SGE_TASK_ID
+
+###################################################### Step 2) Transform the allele frequency trajectories
+
+CurrentTrajs="MegaRun/ReducedTrajectories"$SGE_TASK_ID".txt" #Agregar identificador unico
+ResampledTrajectory="MegaRun/ResampledTrajs"$SGE_TASK_ID".txt"
+TrajsMsselLike="MegaRun/TrajMsselLike"$SGE_TASK_ID".txt"
+
+LastPopSize=$( tail -n1 ConstantSize.txt | awk '{print $1}' )
+
+echo "Last pop size = "$LastPopSize
+
+AlleleCount=$( wc -l MegaRun/Alleles_${SGE_TASK_ID}.txt | tail -n1 | awk '{print $1}' )
+echo $AlleleCount
+Reps=$( ls MegaRun/Alleles_${SGE_TASK_ID}.txt | wc -l )
+
+### This script creates the trajectory in a format that mssel3 likes.
+perl TrajToMsselFormat.pl MegaRun/Traj_ $LastPopSize MegaRun/TrajMsselLike$SGE_TASK_ID.txt $AlleleCount 0 $SGE_TASK_ID 
+
+### stepftn discretizes the allele frequency trajectories according to a set of frequency bounds defined in freqints.h .This helps to reduce the computing time. If you want to change this, change the bounds in freqints.h and
+### recompile stepftn using gcc -O3 -o stepftn stepftn.c -lm
+cat $TrajsMsselLike | /mnt/Timina/dortega/aizarraraz/PRF/PReFerSim-master/./stepftn > $CurrentTrajs
+
+###################################################### Step 3) Simulate trees based on the allele frequency trajectory
+
+NombreArbol="trees_DFE_"${SGE_TASK_ID}".txt" 
+
+ThingsToPrint="$(( $DerivedAlleleNumber + 1))"
+
+## $ThingsToPrint .- Total number of simulated lineages. You need to include one lineage with the ancestral allele or the program won't work.
+## $AlleleCount .- Number of trees simulated. This number depends on the number of trajectories simulated.
+## $NumberOfLineagesWithDerivedAllele .- Lineages with the derived allele.
+/mnt/Timina/dortega/aizarraraz/PRF/PReFerSim-master/./mssel3 $ThingsToPrint $AlleleCount 1 $DerivedAlleleNumber $CurrentTrajs 1 -r 0.0 2 -t 0.0 -seeds 1 1 1 -T | grep '(' >> /mnt/Timina/dortega/aizarraraz/PRF/Results/MasterRun/$NombreArbol
+
+done
