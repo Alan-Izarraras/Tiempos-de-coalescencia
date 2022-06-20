@@ -1,11 +1,10 @@
 
 library(ape)
 
+Valores_2Ns <- seq(2, 60, 2)
 
-
-  lista_arboles <- read.tree("trees_DFE1_merge50.txt")
-  #print(lista_arboles)
-  
+for (a in 1:length(Valores_2Ns))  {
+  lista_arboles <- read.tree(paste('merged_', Valores_2Ns[a], 'Ns.txt', sep="")) 
   lista_intervalos <- list()
 
 
@@ -18,7 +17,7 @@ library(ape)
   seq.max <- seq_len(max(num.obs))
   matriz_intervalos <- t(sapply(lista_intervalos, "[", i = seq.max))
 
-  tiempo_acumulado <- matrix(nrow=nrow(matriz_intervalos), ncol=98)
+  tiempo_acumulado <- matrix(nrow=nrow(matriz_intervalos), ncol=99)
 
   for (r in 1:nrow(matriz_intervalos))  {  
     i<-1                                                    
@@ -28,7 +27,7 @@ library(ape)
       suma <- suma + matriz_intervalos[r, i+1]  
       tiempo_acumulado[r, i+1] <- suma    
       i <- i+1                                                               
-      if (i==98)  { #Aqui el cambio de 90 por 99
+      if (i==ncol(matriz_intervalos))  { #Aqui el cambio 99 por ncol(matriz_intervalos)
         break  
       }
     }
@@ -303,3 +302,4 @@ library(ape)
 
   write.csv(matriz_conteo_rangos, paste("matriz_DFE1_conteo.csv", sep=""))
   write.csv(Prob_rangos_, paste("matriz_probabilidad_DFE1.csv", sep=""))
+ }
