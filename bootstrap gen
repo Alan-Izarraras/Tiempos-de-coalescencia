@@ -1,0 +1,23 @@
+
+#Este codigo deberia de bastar. Pensando que todo esta en un solo directorio...
+#De hecho podria iniciar el proceso en la carpeta de los arboles.
+
+
+for b in {1..100}
+do
+  	touch trees_DFE_bootstrap$b.txt
+        for i in {0..100}
+        do
+          	nums_random=$((1 + $RANDOM % 100))
+                #if [ $nums_random -le 9 ];
+                #then nums_random="0$nums_random"
+                #echo "Equivale a $nums_random"
+                #fi
+                cat trees_DFE_$nums_random.txt >> trees_DFE_bootstrap$b.txt
+                #echo "se esta usando el archivo trees_$nums_random.txt"
+        done
+	echo "archivo bootstrap$b armado"
+done
+
+#Corramos solo 2 archivos bootstrap donde si todo sale bien esperariamos visualizar archivos bootstrap 1 y 2, donde cada uno tiene  50 archivos.
+#Lo que pasa es que en el caso de que sea 1 tiene que ser 01
