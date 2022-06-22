@@ -79,71 +79,61 @@ for (r in 1:nrow(Table))  {
 #Ah ok me equivoque tantito porque para ahcer las comparaciones necesito los conteos y no las probabilidades. 
 #Como paso de probabilidad a conteo? solamente divido la matriz entre en n max. 
 
-DFE_conteo <- read.csv("matriz_DFE1_conteo.csv", sep=",")
-DFE_conteo <- DFE_conteo[,-1]
+#La idea es guardar las matrices de conteo en una lista de matrices
+#Lo mismo con las likelihoods y likelihood_estimates
+
 loglikelihoods <- vector()
 likelihood_estimates <- matrix(nrow=100, ncol=3)
+lista_DFE_conteo <- list()
+lista_loglikelihoods <- list()
+lista_likelihood_estimates <- list()
 
-for (a in 1:100)  {
-  matriz_gamma <- read.csv(paste("matriz_gamma_", a, ".csv", sep=""))
-  matriz_gamma <- matriz_gamma[,-1]
-  i<-1
-  for (r in 1:nrow(DFE_conteo))  {
-    for (c in 1:ncol(DFE_conteo))  {
-      if (DFE_conteo[r, c] != 0)  {
-        loglikelihoods[i] <- DFE_conteo[r,c] * log(matriz_gamma[r, c]) #Necesito que este archivo no cambie
-        i <- i +1
+for (x in 1:10)  { #Por ahora estoy usando 10 bootstraps
+  DFE_conteo <- read.csv(paste("Matriz_DFEboot", x, "_conteo.csv", sep=""))
+  DFE_conteo <- DFE_conteo[,-1]
+  lista_DFE_conteo[[x]] <- DFE_conteo
+
+  for (a in 1:100)  {
+    matriz_gamma <- read.csv(paste("matriz_gamma_", a, ".csv", sep=""))
+    matriz_gamma <- matriz_gamma[,-1]
+    i<-1
+    for (r in 1:nrow(DFE_conteo))  {
+      for (c in 1:ncol(DFE_conteo))  {
+        #DFE_conteo <- lista_DFE_conteo[x]  #Testear esta linea
+        if (DFE_conteo[r, c] != 0)  {
+          loglikelihoods[i] <- DFE_conteo[r,c] * log(matriz_gamma[r, c]) #Necesito que este archivo no cambie
+          lista_loglikelihoods[[x]] <- loglikelihoods
+          i <- i +1
+        }
       }
     }
+    likelihood_estimates[a,3] <- sum(loglikelihoods)
+    lista_likelihood_estimates[[x]] <- likelihood_estimates
   }
-  likelihood_estimates[a,3] <- sum(loglikelihoods)
 }
 
+#Lo de abaho es meramente para graficar.
 
-#Codigo para pasar alfa y theta de cada estimado.
-for (x in 1:100) {
-  likelihood_estimates[x,1] <- Table[x,1] 
-  likelihood_estimates[x,2]	<- Table[x,2]
+for (q in 1:10)  {
+  likelihood_estimates <- lista_likelihood_estimates[[q]]
+  for (x in 1:100) {
+    likelihood_estimates[x,1] <- Table[x,1] 
+    likelihood_estimates[x,2] <- Table[x,2]
+    #lista_likelihood_estimates[[q]] <- likelihood_estimates
+  }
+  likelihood_estimates <- cbind(likelihood_estimates, seq(1:100))
+  likelihood_estimates <- as.data.frame(likelihood_estimates)
+  #lista_likelihood_estimates[[q]] <- likelihood_estimates
+  estimado_maximo <- order(likelihood_estimates$V3, decreasing = T)
+  estimado_maximo[1]
+  jpeg(filename = paste("DFE_bootstrap", q, ".jpeg", sep=""), width=900)
+  stripchart(likelihood_estimates$V3~likelihood_estimates$V4)
+  stripchart(likelihood_estimates$V3~likelihood_estimates$V4, vertical=T, main="Curva de verosimilitud", ylab = "loglikelihood values", xlab = "Gamma distribution parameter combinations", col=1 , pch = 20)
+  abline(v=95, col=2, pch = 7, cex = 2, lwd = 2, lty = 2) #Valor real Rojo = real
+  abline(v=estimado_maximo[1], col = 3, pch = 7, cex = 2, lwd = 2, lty = 2) #Valor estimado Verde = Estimado
+  dev.off()  
 }
-
-#Que no cunda el panico. 
-
-likelihood_estimates <- cbind(likelihood_estimates, seq(1:100))
-likelihood_estimates <- as.data.frame(likelihood_estimates)
-
-stripchart(likelihood_estimates$V3~likelihood_estimates$V4)
-stripchart(likelihood_estimates$V3~likelihood_estimates$V4, vertical=T, main="Curva de verosimilitud", ylab = "loglikelihood values", xlab = "Gamma distribution parameter combinations", col=2 , pch = 16,)
 
 #Necesito eso pero sin los pountos, solo poninendo el punto del estimado y despues el punto real.
+#stripchart(likelihood_estimates$V1~likelihood_estimates$V2, main="Parametros de una distribución gamma",ylab = "Parámetro alfa", xlab = "Parametro Beta", vertical=T, method="jitter", pch=19, col=3)
 
-stripchart(likelihood_estimates$V1~likelihood_estimates$V2, main="Parametros de una distribución gamma",ylab = "Parámetro alfa", xlab = "Parametro Beta", vertical=T, method="jitter", pch=19, col=3)
-
-
-#Falta hacer grafica de barras con las porporciones de la DFE real y la DFE estimada.
-
-Table_finalistas <- matrix()
-Table_finalistas <- rbind(Table[95,], Table[96,])
-Table_finalistas <- Table_finalistas[,-1]
-Table_finalistas <- Table_finalistas[,-1]
-#Ahora esto tengo que... quitarle las priemras dos columnas y luego voltear las dimensiones.
-
-Data_table <- matrix(nrow=13, ncol=3)
-categorias <- colnames(Table_finalistas)
-
-i <- 1
-for (x in 1:13)  {
-	Data_table[x,1] <- Table_finalistas[1, x]
-	Data_table[x,2] <- Table_finalistas[2, x]
-	Data_table[x,3] <- categorias[x]
-	i <- i+1
-}
-
-Data_table <- as.data.frame(Data_table)
-Data_table$V1 <- as.numeric(Data_table$V1)
-Data_table$V2 <- as.numeric(Data_table$V2)
-
-barplot(height = Data_table$V1, names=Data_table$V3)
-
- c("2Ns < 2.5", "2.5 < 2Ns < 7.5", "7.5 < 2Ns < 12.5", "12.5 < 2Ns < 17.5", "17.5 < 2Ns < 22.5", "22.5 < 2Ns < 27.5", "27.5 < 2Ns < 32.5", "32.5 < 2Ns < 37.5", "37.5 < 2Ns < 42.5", "42.5 < 2Ns < 47.5", "47.5 < 2Ns < 52.5", "52.5 < 2Ns < 57.5", "2Ns > 57.5")
-
-barplot(height = Data_table$V1, names=Data_table$V3, col = 4, ylab="Probabilidad", xlab = "Rango 2Ns", main = "Distribución gamma", ylim = seq(0,1), width = 0.1, las=2, names.arg = c("2Ns < 2.5", "2.5 < 2Ns < 7.5", "7.5 < 2Ns < 12.5", "12.5 < 2Ns < 17.5", "17.5 < 2Ns < 22.5", "22.5 < 2Ns < 27.5", "27.5 < 2Ns < 32.5", "32.5 < 2Ns < 37.5", "37.5 < 2Ns < 42.5", "42.5 < 2Ns < 47.5", "47.5 < 2Ns < 52.5", "52.5 < 2Ns < 57.5", "2Ns > 57.5"))
