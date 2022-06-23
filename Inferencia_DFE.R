@@ -1,6 +1,7 @@
 
 ### Codigo para generar estimados de verosimilitud de parametros gamma a partir de arboles simulados con una DFE conocida ###
 #Generar tabla de parametros gamma.
+#Si quieres usar más corridas tienes que modificar algunas cosas... luego las comento o corrijo para que se haga automatico#
 
 #Reemplazo '2.5' -> 1
 #Reemplazo 5 -> 2
@@ -114,6 +115,9 @@ for (x in 1:10)  { #Por ahora estoy usando 10 bootstraps
 
 #Lo de abaho es meramente para graficar.
 
+vector_maximos <- vector()
+
+#Codigo para pasar alfa y theta de cada estimado.
 for (q in 1:10)  {
   likelihood_estimates <- lista_likelihood_estimates[[q]]
   for (x in 1:100) {
@@ -126,14 +130,38 @@ for (q in 1:10)  {
   #lista_likelihood_estimates[[q]] <- likelihood_estimates
   estimado_maximo <- order(likelihood_estimates$V3, decreasing = T)
   estimado_maximo[1]
+  vector_maximos[q] <- estimado_maximo[1]
   jpeg(filename = paste("DFE_bootstrap", q, ".jpeg", sep=""), width=900)
   stripchart(likelihood_estimates$V3~likelihood_estimates$V4)
   stripchart(likelihood_estimates$V3~likelihood_estimates$V4, vertical=T, main="Curva de verosimilitud", ylab = "loglikelihood values", xlab = "Gamma distribution parameter combinations", col=1 , pch = 20)
-  abline(v=95, col=2, pch = 7, cex = 2, lwd = 2, lty = 2) #Valor real Rojo = real
-  abline(v=estimado_maximo[1], col = 3, pch = 7, cex = 2, lwd = 2, lty = 2) #Valor estimado Verde = Estimado
+  abline(v=95, col=2, pch = 7, cex = 2, lwd = 2, lty = 5) #Valor real Rojo = real
+  abline(v=estimado_maximo[1], col = 3, pch = 7, cex = 2, lwd = 2, lty = 5) #Valor estimado Verde = Estimado
   dev.off()  
 }
 
-#Necesito eso pero sin los pountos, solo poninendo el punto del estimado y despues el punto real.
-#stripchart(likelihood_estimates$V1~likelihood_estimates$V2, main="Parametros de una distribución gamma",ylab = "Parámetro alfa", xlab = "Parametro Beta", vertical=T, method="jitter", pch=19, col=3)
+#Bien, con eso ya tengo todas las graficas individuales. Ahora falta la grafica que incorpora todos los bootstraps.
+
+#2D scatterplot
+#Falta agregar codigo para construir la matriz maximos
+
+maximos <- matrix(nrow=10, ncol=2)
+
+for (i in 1:10)  {
+  indice <- vector_maximos[i] 
+  maximos[i,1] <- likelihood_estimates[indice,1] 
+  maximos[i,2] <- likelihood_estimates[indice,2]  
+}
+
+jpeg(filename = "Inferencia de parametros gamma.jpeg", width=500)
+plot(maximos, main = "Inferencia de parametros de una distribucion gamma", xlim = c(0.02, 0.20), ylim = c(2,20), xlab = "Valores Alpha", ylab = "Valores Gamma", pch = 5)
+abline(v=0.20, h=10, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
+points(y = 10, x= 0.20, pch = 20, col=2)
+dev.off()
+
+
+#Metodo alternativo de plottear, Stripchart fallido
+#stripchart(likelihood_estimates$V1~likelihood_estimates$V2, main="Estimacion de parametros de una distribución gamma",ylab = "Parámetro alfa", xlab = "Parametro Beta", vertical=T, method="jitter", pch=19, col=F)
+#abline(v=5, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
+#abline(h=0.20, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
+#points(y = 0.20, x= 6)
 
