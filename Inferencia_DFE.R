@@ -3,8 +3,7 @@
 #Generar tabla de parametros gamma.
 #Si quieres usar más corridas tienes que modificar algunas cosas... luego las comento o corrijo para que se haga automatico#
 
-#Reemplazo '2.5' -> 1
-#Reemplazo 5 -> 2
+#Adaptado para saltos de 2Ns (desde 0 hasta 60)
 
 UpperThreshold = 60
 Limit = UpperThreshold + 2.5
@@ -42,7 +41,7 @@ for (j in AlphaGrid){
     }
 }
 
-colnames(Table) <- c("alpha", "gamma", "P(2Ns < 2.5)", "P(2.5 < 2Ns < 7.5)", "P(7.5 < 2Ns < 12.5)", "P(12.5 < 2Ns < 17.5)", "P(17.5 < 2Ns < 22.5)", "P(22.5 < 2Ns < 27.5)", "P(27.5 < 2Ns < 32.5)", "P(32.5 < 2Ns < 37.5)", "P(37.5 < 2Ns < 42.5)", "P(42.5 < 2Ns < 47.5)", "P(47.5 < 2Ns < 52.5)", "P(52.5 < 2Ns < 57.5)", "P( 2Ns > 57.5)")
+#colnames(Table) <- c("alpha", "gamma", "P(2Ns < 2.5)", "P(2.5 < 2Ns < 7.5)", "P(7.5 < 2Ns < 12.5)", "P(12.5 < 2Ns < 17.5)", "P(17.5 < 2Ns < 22.5)", "P(22.5 < 2Ns < 27.5)", "P(27.5 < 2Ns < 32.5)", "P(32.5 < 2Ns < 37.5)", "P(37.5 < 2Ns < 42.5)", "P(42.5 < 2Ns < 47.5)", "P(47.5 < 2Ns < 52.5)", "P(52.5 < 2Ns < 57.5)", "P( 2Ns > 57.5)")
 
 write.table(Table,file="TableOfProbabilities.txt",row.names=FALSE,col.names=FALSE,sep="\t")
 
@@ -50,7 +49,7 @@ write.table(Table,file="TableOfProbabilities.txt",row.names=FALSE,col.names=FALS
 #Leo las matrices de probabilidad en formato csv y las paso a una lista
 
 Lista_matrices <- list()
-Vector_Ns <- seq(0, 60, 5)
+Vector_Ns <- seq(0, 60, 2)
 
 for (v in 1:length(Vector_Ns))  {
   uno <- read.csv(paste("matriz_probabilidad_", Vector_Ns[v], "Ns.csv", sep=""))
@@ -72,10 +71,10 @@ for (r in 1:nrow(Table))  {
     Lista_Suma[[v]] <- Lista_matrices[[v]]*Table[r,i]
     i <- i+1
   }
-  matriz_gamma_suma <- Lista_Suma[[1]] + Lista_Suma[[2]] + Lista_Suma[[3]] + Lista_Suma[[4]] + Lista_Suma[[5]] + Lista_Suma[[6]] + Lista_Suma[[7]] + Lista_Suma[[8]] + Lista_Suma[[9]] + Lista_Suma[[10]] + Lista_Suma[[11]] + Lista_Suma[[12]] + Lista_Suma[[13]]
+  #matriz_gamma_suma <- Reduce('+', Lista_matrices)  #tengo que verificar que esto sea equivalente a lo de abajo. Creo que no. #Explorar otras ideas.
+  matriz_gamma_suma <- Lista_Suma[[1]] + Lista_Suma[[2]] + Lista_Suma[[3]] + Lista_Suma[[4]] + Lista_Suma[[5]] + Lista_Suma[[6]] + Lista_Suma[[7]] + Lista_Suma[[8]] + Lista_Suma[[9]] + Lista_Suma[[10]] + Lista_Suma[[11]] + Lista_Suma[[12]] + Lista_Suma[[13]] + Lista_Suma[[14]] + Lista_Suma[[15]] + Lista_Suma[[16]] + Lista_Suma[[17]] + Lista_Suma[[18]] + Lista_Suma[[19]] + Lista_Suma[[20]] + Lista_Suma[[21]] + Lista_Suma[[22]] + Lista_Suma[[23]] + Lista_Suma[[24]] + Lista_Suma[[25]] + Lista_Suma[[26]] + Lista_Suma[[27]] + Lista_Suma[[28]] + Lista_Suma[[29]] + Lista_Suma[[30]] + Lista_Suma[[31]]                                                         	
   write.csv(matriz_gamma_suma, paste("matriz_gamma_", r, ".csv", sep=""))
 }
-
 
 #Ah ok me equivoque tantito porque para ahcer las comparaciones necesito los conteos y no las probabilidades. 
 #Como paso de probabilidad a conteo? solamente divido la matriz entre en n max. 
@@ -90,7 +89,7 @@ lista_loglikelihoods <- list()
 lista_likelihood_estimates <- list()
 
 for (x in 1:10)  { #Por ahora estoy usando 10 bootstraps
-  DFE_conteo <- read.csv(paste("Matriz_DFEboot", x, "_conteo.csv", sep=""))
+  DFE_conteo <- read.csv(paste("MatrizConteo_DFE_", x, ".csv", sep=""))
   DFE_conteo <- DFE_conteo[,-1]
   lista_DFE_conteo[[x]] <- DFE_conteo
 
@@ -113,7 +112,7 @@ for (x in 1:10)  { #Por ahora estoy usando 10 bootstraps
   }
 }
 
-#Lo de abaho es meramente para graficar.
+#Lo de abajo es meramente para graficar.
 
 vector_maximos <- vector()
 
