@@ -157,10 +157,31 @@ abline(v=0.20, h=10, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
 points(y = 10, x= 0.20, pch = 20, col=2)
 dev.off()
 
-
 #Metodo alternativo de plottear, Stripchart fallido
 #stripchart(likelihood_estimates$V1~likelihood_estimates$V2, main="Estimacion de parametros de una distribución gamma",ylab = "Parámetro alfa", xlab = "Parametro Beta", vertical=T, method="jitter", pch=19, col=F)
 #abline(v=5, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
 #abline(h=0.20, col=2, pch = 7, cex = 2, lwd = 2, lty = 5)
 #points(y = 0.20, x= 6)
 
+vector_maximos <- vector_maximos[!duplicated(vector_maximos)]
+intervalo <- matrix(nrow=length(vector_maximos), ncol=2)
+i <- 1
+vector_maximos <- vector_maximos -1 #Tengo que hcer esto porque el vector maximos esta basando en la tabla de likelihoods que tiene fila 1, Pero estoy oprenaod sobre la tabla de probabilidades que tiene fila 0. 
+for (n in vector_maximos)  {
+  intervalo[i,1] <- Table[n,3] 
+  intervalo[i,2] <- sum(Table[n,4], Table[n,5], Table[n,6], Table[n,7], Table[n,8], Table[n,9], Table[n,10], Table[n,11], Table[n,12], Table[n,13], Table[n,14], Table[n,15], Table[n,16], Table[n,17], Table[n,18], Table[n,19], Table[n,20], Table[n,21], Table[n,22], Table[n,23], Table[n,24], Table[n,25], Table[n,26], Table[n,27], Table[n,28], Table[n,29], Table[n,30], Table[n,31])
+  i <- i + 1
+}
+
+vector_intervalos <- c("(0.16, 12)", "(0.16, 14)", "(0.14, 18)", "(0.14, 16)", "(0.20, 10)")
+jpeg(filename = "Comparaciones_Intervalo_1.jpeg", width=600)
+barplot(height = intervalo[,2], main= "Comparison of P(2Ns >= 1)", names=vector_intervalos, ylim=c(0,1), ylab = "Probability", las=1, col= c(0,0,0,0,2), las=2)
+dev.off()
+jpeg(filename = "Comparaciones_Intervalo_2.jpeg", width=600)
+barplot(height = intervalo[,1], main= "Comparison of P(1 < 2Ns < 61)", names=vector_intervalos, ylim=c(0,1), ylab = "Probability", las=1, col= c(0,0,0,0,2), las=2)
+dev.off()
+
+
+rownames(intervalo) <- vector_intervalos
+
+write.table(intervalo,file="ComparacionDistribuciones.txt",row.names=T,col.names=FALSE,sep="\t")
