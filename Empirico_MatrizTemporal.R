@@ -14,49 +14,59 @@ library(ape)
   seq.max <- seq_len(max(num.obs))
   matriz_intervalos <- t(sapply(lista_intervalos, "[", i = seq.max))
 
-  #El objetivo ahora es appendear la matriz de singletones a la matriz de intervalos. 
-  #rbind() soloi funciona cuando el numero de columnas son iguales, entonces lo que se puede hacer es insertar ese numero de columnas
-  #A mi matriz de singletones. 
-  #En este caso el maximo son 214 columnasentonces insertaria 212
-  colnames(datos) <- c(1,2)
-  vacio <- matrix(nrow=nrow(datos), ncol=212)
-  datos_v2 <- cbind(datos, vacio)
-  colnames(matriz_intervalos) <- seq(1:214)
-  fusion <- rbind(datos_v2, matriz_intervalos)
-  #Fusion es la matriz de interalos incluyendo singletones y dobletones! 
+  
+  #Incorporar longitudes de singletones y dobletones a la matriz de intervalos. 
 
-  ###Recuerda cambiar nombres de variables de esta parte nueva###
+  singletones <- read.table('Single_y_doble_subset.txt')
+  colnames(singletones) <- c(1,2)
+  matriz_temp <- matrix(nrow=nrow(singletones), ncol=ncol(matriz_intervalos)-2)
+  matriz_temp <- cbind(singletones, matriz_temp)
+  colnames(matriz_temp) <- seq(1:ncol(matriz_intervalos))
+  colnames(matriz_intervalos) <- seq(1:ncol(matriz_intervalos))
+  matriz_intervalos <- rbind(matriz_temp, matriz_intervalos)
 
 
   tiempo_acumulado <- matrix(nrow=nrow(matriz_intervalos), ncol=ncol(matriz_intervalos))
 
-  for (r in 1:nrow(matriz_intervalos))  {  
+   for (r in 1:nrow(matriz_intervalos))  {  
     i<-1                                                    
     suma <- matriz_intervalos[r,i]  
     tiempo_acumulado[r,i] <- suma   
     for (c in 1:ncol(matriz_intervalos))  { 
       suma <- suma + matriz_intervalos[r, i+1]  
       tiempo_acumulado[r, i+1] <- suma    
-      i <- i+1                                                               
-      if (i==ncol(matriz_intervalos))  { #Aqui el cambio 99 por ncol(matriz_intervalos)
+      i <- i+1
+      if (tiempo_acumulado[r,1] - tiempo_acumulado[r,2] == 0)  {
+        tiempo_acumulado[r,2] = 0                                                               
+      }
+      else if (i==ncol(matriz_intervalos))  { #Aqui el cambio 99 por ncol(matriz_intervalos)
         break  
       }
     }
   }
 
+
   #Se tarda mucho la mac aqui, entonces lo mejor seria... subsetear y trabajar con poquitos arboles
   #Estandarizarlo de esa manera
   #Despues ya desarrollo una pipeline/scripts formales y se los doy al cluster. 
+
+  matriz_intervalos[is.na(matriz_intervalos)] <- 0
+  tiempo_acumulado[is.na(tiempo_acumulado)] <- 0
 
   max_linajes <- ncol(matriz_intervalos) #Aqui otro cambio ncol(matriz_intervalos)
   num_linajes <- 1
 
   for (i in 1:nrow(tiempo_acumulado))  {
-    num_linajes[i] <- match(NA, tiempo_acumulado[i,])
-    if (NA %in% num_linajes[i])  {
+    num_linajes[i] <- match(0, tiempo_acumulado[i,])
+    if (0 %in% num_linajes[i])  {
       num_linajes[i] <- max_linajes
     }
   }
+
+  num_linajes[is.na(num_linajes)] <- max_linajes
+
+  #Okei este es el origen del bug. Lo que pasa es que mete NA en aquellos linajes que llegan al maximo. (creo) Si.
+  #Una quick fix es reemplazar NA por max_linajes
   
   rangos_tiempo <- c(0.000002, 0.00002, 0.0002, 0.002, 0.02, 0.2, 2, 20, 200, 2000, 20000, 200000) #Relate
   #rangos_tiempo_Relate <- c(0.000002, 0.000016, 0.000128, 0.001024, 0.008192, 0.065536, 0.524288, 4.194304, 33, 268, 2147, 17179, 137438) #x8
@@ -66,8 +76,6 @@ library(ape)
   #rangos_tiempo <- c(0.000002, 0.000004, 0.000008, 0.000016, 0.000032, 0.000064, 0.000128, 0.000256, 0.000512, 0.001024, 0.002048, 0.004096, 0.008192, 0.016392, 0.032784, 0.065568, 0.131136, 0.264472, 0.528944, 1.057888, 2.115776, 4.231552, 8.643104, 16)
   #Falta un rango de tiempo alternativo que no llegue hasta el tiempo maximo. 
 
-  matriz_intervalos[is.na(matriz_intervalos)] <- 0
-  tiempo_acumulado[is.na(tiempo_acumulado)] <- 0
 
   matriz_linajes <- matrix(nrow=nrow(tiempo_acumulado), ncol=length(rangos_tiempo)) #24 columnas porque es la division de tiempo usada. 
 
@@ -142,6 +150,6 @@ library(ape)
 
   Prob_rangos_ <- matriz_conteo_rangos / nrow(matriz_linajes)
 
-  write.csv(matriz_conteo_rangos, paste("matriz_DFE1_conteo.csv", sep=""))
-  write.csv(Prob_rangos_, paste("matriz_probabilidad_DFE1.csv", sep=""))
+  write.csv(matriz_conteo_rangos, paste("matriz_conteo_Relate.csv", sep=""))
+  write.csv(Prob_rangos_, paste("matriz_probabilidad_Relate.csv", sep=""))
  }
