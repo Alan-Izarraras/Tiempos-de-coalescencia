@@ -14,6 +14,20 @@ library(ape)
   seq.max <- seq_len(max(num.obs))
   matriz_intervalos <- t(sapply(lista_intervalos, "[", i = seq.max))
 
+  #El objetivo ahora es appendear la matriz de singletones a la matriz de intervalos. 
+  #rbind() soloi funciona cuando el numero de columnas son iguales, entonces lo que se puede hacer es insertar ese numero de columnas
+  #A mi matriz de singletones. 
+  #En este caso el maximo son 214 columnasentonces insertaria 212
+  colnames(datos) <- c(1,2)
+  vacio <- matrix(nrow=nrow(datos), ncol=212)
+  datos_v2 <- cbind(datos, vacio)
+  colnames(matriz_intervalos) <- seq(1:214)
+  fusion <- rbind(datos_v2, matriz_intervalos)
+  #Fusion es la matriz de interalos incluyendo singletones y dobletones! 
+
+  ###Recuerda cambiar nombres de variables de esta parte nueva###
+
+
   tiempo_acumulado <- matrix(nrow=nrow(matriz_intervalos), ncol=ncol(matriz_intervalos))
 
   for (r in 1:nrow(matriz_intervalos))  {  
@@ -29,6 +43,10 @@ library(ape)
       }
     }
   }
+
+  #Se tarda mucho la mac aqui, entonces lo mejor seria... subsetear y trabajar con poquitos arboles
+  #Estandarizarlo de esa manera
+  #Despues ya desarrollo una pipeline/scripts formales y se los doy al cluster. 
 
   max_linajes <- ncol(matriz_intervalos) #Aqui otro cambio ncol(matriz_intervalos)
   num_linajes <- 1
