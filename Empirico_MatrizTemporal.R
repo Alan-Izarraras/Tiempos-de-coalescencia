@@ -1,7 +1,7 @@
 library(ape)
 
 
-  lista_arboles <- read.tree('Crom22_subset_limpio.txt') 
+  lista_arboles <- read.tree('yri_0Ns.txt') 
   lista_intervalos <- list()
 
 
@@ -14,10 +14,14 @@ library(ape)
   seq.max <- seq_len(max(num.obs))
   matriz_intervalos <- t(sapply(lista_intervalos, "[", i = seq.max))
 
-  
-  #Incorporar longitudes de singletones y dobletones a la matriz de intervalos. 
+  #Aqui es donde tengo que hacer el ajuste de multiplicar por 4N_diploide que tambien podria hacer un expeirmento de 4N_haploide
+  #Entonces tengo que multiplicar por 4(5,000)
 
-  singletones <- read.table('Single_y_doble_subset.txt')
+  matriz_intervalos <- matriz_intervalos * 57896 #Podria ser 14,474 o 28,948
+  
+  #Incorporar longitudes de singletones y dobletones a la matriz de intervalos. Usar para arboles Relate
+
+  singletones <- read.table('subset_singles.txt')
   colnames(singletones) <- c(1,2)
   matriz_temp <- matrix(nrow=nrow(singletones), ncol=ncol(matriz_intervalos)-2)
   matriz_temp <- cbind(singletones, matriz_temp)
@@ -68,7 +72,7 @@ library(ape)
   #Okei este es el origen del bug. Lo que pasa es que mete NA en aquellos linajes que llegan al maximo. (creo) Si.
   #Una quick fix es reemplazar NA por max_linajes
   
-  rangos_tiempo <- c(0.000002, 0.00002, 0.0002, 0.002, 0.02, 0.2, 2, 20, 200, 2000, 20000, 200000) #Relate
+  rangos_tiempo <- c(0.000002, 0.00002, 0.0002, 0.002, 0.02, 0.2, 2, 20, 200, 2000, 20000, 400000) #Relate
   #rangos_tiempo_Relate <- c(0.000002, 0.000016, 0.000128, 0.001024, 0.008192, 0.065536, 0.524288, 4.194304, 33, 268, 2147, 17179, 137438) #x8
   #rangos_tiempo <- c(0.000002, 0.000016, 0.000128, 16) #x8 #t4 
   #rangos_tiempo <- c(0.000002, 0.000020, 0.000200, 0.002000, 0.020000, 0.200000, 2.000000, 16)
@@ -150,6 +154,6 @@ library(ape)
 
   Prob_rangos_ <- matriz_conteo_rangos / nrow(matriz_linajes)
 
-  write.csv(matriz_conteo_rangos, paste("matriz_conteo_Relate.csv", sep=""))
-  write.csv(Prob_rangos_, paste("matriz_probabilidad_Relate.csv", sep=""))
+  write.csv(matriz_conteo_rangos, paste("matriz_conteo_100kNe_ajuste4N.csv", sep=""))
+  write.csv(Prob_rangos_, paste("matriz_probabilidad_100kNe_ajuste4N.csv", sep=""))
  }
