@@ -42,7 +42,7 @@ for (r in 1:nrow(matriz_intervalos))  {
     if (tiempo_acumulado[r,1] - tiempo_acumulado[r,2] == 0)  {
       tiempo_acumulado[r,2] = 0                                                               
     }
-    else if (i==ncol(matriz_intervalos))  { #Aqui el cambio 99 por ncol(matriz_intervalos)
+    if (i==ncol(matriz_intervalos))  { #Aqui el cambio 99 por ncol(matriz_intervalos)
       break  
     }
   }
