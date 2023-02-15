@@ -1,5 +1,6 @@
 
-#Script para generar las matrices de probabilidad y cuentas para el output de Relate
+#Script para generar las matrices de cuentas para el output de Relate. En este script no son necesarias la matrices de probabilidad. 
+#Ya que de los arboles observados solo necesitamos las observaciones.
 
 library(ape)
 
@@ -128,10 +129,10 @@ for (c in 1:ncol(matriz_conteo))  {
   }       
 }
 
-Prob_rangos_ <- matriz_conteo_rangos / nrow(matriz_linajes)
+#Prob_rangos_ <- matriz_conteo_rangos / nrow(matriz_linajes)
   
 #write.csv(matriz_conteo, paste("matriz_conteo_", a, "Ns_sim", n, ".csv", sep=""))
 write.csv(matriz_conteo_rangos, paste("matriz_conteo_relate_nonsym.csv", sep=""))
-write.csv(Prob_rangos_, paste("matriz_probabilidad_relate_nonsym.csv", sep=""))
+#write.csv(Prob_rangos_, paste("matriz_probabilidad_relate_nonsym.csv", sep=""))
 
 #Done. 
