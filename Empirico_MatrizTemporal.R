@@ -1,5 +1,6 @@
 
 #Script para generar las matrices de probabilidad y cuentas de replicas bootstrap.
+#Genera las matrices de referencia, los arboles simulados que son compatibles con Relate
 #Este ejecuta para cada replica de cada valor Ns (4x10 = 40 corridas)
 
 library(ape)
@@ -139,6 +140,8 @@ for (a in valor_ns)  {
         }
       }
     }
+    
+    matriz_conteo_rangos <- matriz_conteo_rangos + 1
 
     #Aqui la idea es disminuir el numero de rangos, e.g. agrupar de 10 en 10 linajes + el pilon.
     matriz_conteo_rangos <- matrix(nrow=(max_linajes/10 + 1), ncol=length(rangos_tiempo)) #Agrupando de 10 en 10. 
