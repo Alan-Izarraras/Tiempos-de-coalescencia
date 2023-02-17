@@ -1,6 +1,7 @@
 
 #Script para generar las matrices de cuentas para el output de Relate. En este script no son necesarias la matrices de probabilidad. 
 #Ya que de los arboles observados solo necesitamos las observaciones.
+#Este script genera las matrices de busqueda --> datos observados. Corresponde al set1 de los datos. 
 
 library(ape)
 
