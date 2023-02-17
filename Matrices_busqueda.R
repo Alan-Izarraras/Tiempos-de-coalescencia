@@ -106,6 +106,13 @@ for (c in 1:ncol(matriz_linajes))  {
   }
 }
 
+filas_extra <- 99 - ncol(matriz_intervalos)
+matriz_extra <- matrix(nrow = filas_extra, ncol = ncol(matriz_conteo))
+matriz_extra[is.na(matriz_extra)] <- 0
+
+matriz_conteo <- rbind(matriz_extra, matriz_conteo)
+matriz_conteo_rangos <- matrix(nrow= 10, ncol=length(rangos_tiempo))
+
 #Aqui la idea es disminuir el numero de rangos, e.g. agrupar de 10 en 10 linajes + el pilon.
 matriz_conteo_rangos <- matrix(nrow=(max_linajes/10 + 1), ncol=length(rangos_tiempo)) #Agrupando de 10 en 10. 
 #matriz_conteo_rangos <- matrix(nrow=20, ncol=length(rangos_tiempo)) #Cambiar aqui
