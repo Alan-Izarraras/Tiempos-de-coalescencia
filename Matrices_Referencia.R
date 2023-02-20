@@ -146,7 +146,7 @@ for (a in valor_ns)  {
 }
 
 
-  Prob_rangos_ <- matriz_conteo_rangos / matriz_conteo_rangos[10,8]
+  Prob_rangos_ <- matriz_conteo_rangos / sum(matriz_conteo_rangos[,8])
 
   write.csv(Prob_rangos_, paste("matriz_probabilidad_", a, "Ns_100runs_set2_smooth.csv", sep=""))
 }
