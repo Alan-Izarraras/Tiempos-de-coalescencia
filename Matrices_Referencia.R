@@ -1,9 +1,9 @@
 #Script para generar matrices de probabilidad/referencia correspondiendo al set2 de datos.
-#Aun utilizando datos empiricos estas matrices provienen de datos de simulación porque son las referencias
+#Estas matrices provienen de datos de simulación porque son las referencias
 #Para usarlo junto con datos empiricos de Relate, requiere un paso de ajuste demografico que está comentado en este script
 
 library(ape)
-valor_ns <- c(0.01, 0.1, 0, 1, 10, 100)
+valor_ns <- c(0.01, 0.1, 0, 1, 10)
 
 for (a in valor_ns)  {
 
@@ -124,7 +124,12 @@ for (a in valor_ns)  {
 
   matriz_conteo <- rbind(matriz_extra, matriz_conteo)
   matriz_conteo_rangos <- matrix(nrow= 10, ncol=length(rangos_tiempo))
-  matriz_conteo <- matriz_conteo + 0.1  #Laplace Creo que hacerlo desde aqui es lo mas correcto. 
+
+  #Ajuste de la corrección Laplace cuando los arboles de referencia tienen distinto numero de arboles
+  referencia <- 1/8117
+  ajuste <- referencia * matriz_conteo[99,8]
+  matriz_conteo <- matriz_conteo + ajuste
+  #matriz_conteo <- matriz_conteo + 1  #Laplace Creo que hacerlo desde aqui es lo mas correcto. 
 
   for (c in 1:ncol(matriz_conteo))  {
   suma <- 0 
@@ -145,7 +150,7 @@ for (a in valor_ns)  {
   }       
 }
 
-
+  
   Prob_rangos_ <- matriz_conteo_rangos / sum(matriz_conteo_rangos[,8])
 
   write.csv(Prob_rangos_, paste("matriz_probabilidad_", a, "Ns_100runs_set2_smooth.csv", sep=""))
