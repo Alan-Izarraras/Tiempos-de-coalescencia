@@ -1,6 +1,8 @@
-#Script para generar tabla de comparasiones de verosimilitud
-#Contiene codigo para graficar.
-#Hecho para comparar el efecto del numero de arboles en la calidad de las inferencias. 
+#Codigo para organizar inferencias comparando multiples valores 2Ns, multiples corridas y multiples infenrencias independientes#
+#Codigo para visualizar curva de verosimilitud + codigo para visualizar parametros maximos inferidos
+
+
+###Version buena inferencias###
 
 replicas <- c(1,2,3)
 valor_sel <- c("0.01", "0.1", "0", "1", "10", "100")
@@ -45,7 +47,7 @@ for (b in valor_sel)  {
 }
 
 
-### Visualización ###
+### Visualización valores de verosimilitud ###
 
 valor_sel <- c("0.01", "0.1", "0", "1", "10", "100")
 runs <- c(1, 10, 50, 100)
@@ -86,3 +88,44 @@ grafica <- ggplot(data=inferencia_Ns, mapping = aes(x=seleccion, y=loglikelihood
 
 grafica <- ggplot(data=inferencia_Ns, mapping = aes(x=seleccion, y=loglikelihood, colour=num_corridas)) + geom_point(size=3, alpha=0.5) + facet_wrap(~num_corridas) + labs(title="Parametro real 1Ns")
  
+
+### Visualización parametros maximos ###
+
+valor_sel <- c("0.01", "0.1", "0", "1", "10", "100")
+runs <- c(1, 10, 50, 100)
+
+matriz_maximos <- matrix(nrow=72, ncol =3)
+colnames(matriz_maximos) <- c("parametro_estimado", "parametro_real", "num_corrida")
+
+i <- 1
+for (a in valor_sel)  {
+  for (l in runs)  {
+    tabla_inferencia <- read.csv(paste("inferencia_parametros_smooth_norm_v2_", a, "Ns_", l, "runs.csv", sep=""))
+    tabla_inferencia <- tabla_inferencia[,-1]
+    colnames(tabla_inferencia) <- c("0.01Ns", "0.1Ns", "0Ns", "1Ns", "10Ns", "100Ns")
+
+    for (f in 1:nrow(tabla_inferencia))  {
+    valor_maximo <- max(tabla_inferencia[f,])
+    parametro_maximo <- which(tabla_inferencia[f,] == valor_maximo)
+    matriz_maximos[i,1] <- colnames(tabla_inferencia[parametro_maximo])
+    matriz_maximos[i,2] <- a
+    matriz_maximos[i,3] <- l
+    i <- i +1
+    }   
+
+  }
+}
+
+matriz_maximos <- as.data.frame(matriz_maximos)
+
+ggplot(data = matriz_maximos, mapping = aes(x=parametro_real, y=parametro_estimado, colour=num_corrida)) + 
+geom_jitter(width=0.2, height=0.2, size=2, alpha=0.5) + facet_wrap(~num_corrida, scales="free") + scale_x_discrete(limit = c("0.01", "0.1", "0", "1", "10", "100")) + 
+scale_y_discrete(limit=c("0.01Ns", "0.1Ns", "0Ns", "1Ns", "10Ns", "100Ns")) + labs(title="Estimados de máxima verosimilitud")
+
+#Para agregar una boxplot encima: + geom_boxplot()
+
+#Para agregar valores theta... Tengo que buscar el manual de PReFerSim y convertir la tasa de mutación a theta 
+#y multiplica por numro de corridas con esa theta y tal vez tambien reportar numero total de arboles. 
+
+#Para 50 inferencias pues solo tengo que... Hacer esto en el cluster. 
+
