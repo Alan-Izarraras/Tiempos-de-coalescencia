@@ -100,5 +100,11 @@ geom_jitter(width=0.2, height=0.2, size=2, alpha=0.5) + facet_wrap(~agrupacion, 
  + scale_y_discrete(limit=c("0Ns", "0.001Ns", "0.003Ns", "0.005Ns", "0.01Ns", "0.017Ns", "0.03Ns", "0.05Ns", "0.1Ns", "0.17Ns", "0.31Ns", "0.56Ns", "1Ns", "1.77Ns", "3.16Ns", "5.62Ns", "10Ns", "17Ns", "31Ns", "56Ns", "100Ns", "177Ns", "316Ns", "562Ns", "1000Ns", "1778Ns")
 ) + labs(title="Estimados de máxima verosimilitud por agrupacion")
 
+### Version bubbleplot solo para valores relevantes! 
+ggplot(data = matriz_maximos) + 
+  geom_count(mapping = aes(x=parametro_real, y=parametro_estimado), alpha=0.5, color=6) + 
+  scale_size_area(max_size=7) + 
+  scale_y_discrete(limit=c("0", "0.001", "0.003", "0.005", "0.01", "0.017", "0.03", "0.05", "0.1", "0.17", "0.31", "0.56", "1", "1.77", "3.16", "5.62", "10", "17", "31", "56", "100", "177", "316", "562", "1000", "1778"), breaks=c("0", "0.01", "0.1", "1", "10", "100", "1000")) + 
+  scale_x_discrete(limits=c("0", "0.01", "0.1", "1", "10", "100", "1000"), breaks=c("0", "0.01", "0.1", "1", "10", "100", "1000"))
 
 
