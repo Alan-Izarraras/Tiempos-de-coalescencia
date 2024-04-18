@@ -1,0 +1,113 @@
+#Encontrar demografia con gLike muestreando arboles de todos los cromosomas con tskit  
+
+import numpy as np
+import glike
+import tskit
+import os
+import msprime
+
+###Cargar vector de posiciones de sitios sinonimos. (10 sitios por cromosoma en orden cosecutivo)
+vector_coordenadas = np.loadtxt('wgs.sinonimo.ready.txt', delimiter=' ')
+
+###Generar una lista de sublistas donde cada sublista tiene 10 coordenadas de un solo cromosomas. Hasta el cromosoma 21. 210 posiciones.
+directory_path = '/mnt/Timina/dortega/aizarraraz/empirical_data/tskit_trees' #update these paths
+sorted_file_paths = [f"/mnt/Timina/dortega/aizarraraz/empirical_data/tskit_trees/chr{i}_yri.tskit.trees" for i in range(1, 21)]
+
+trees = [[] for _ in range(20)]
+
+a=0
+b=-1
+for file_path in sorted_file_paths:
+    chr = tskit.load(file_path)
+    print("using chromosome", file_path)
+    b = b +1
+    for i in range(0,10): #No es inclusivo del ultimo numero. 
+        trees[b].append(chr.at(vector_coordenadas[a]))
+        print("appending coordenate", vector_coordenadas[a])
+        a = a + 1
+        print("valor", a, "del vector de coordenadas hecho")
+        
+print("listas de coordenadas completadas")
+print("Debería tener 20 sublistas y la ultima sublista tener 10 elementos")
+print("numero de sublistas:",len(trees), "len() de la ultima sublista:" len(trees[9]))
+
+#Muestrear las sublistas para generar 20 listas con un elemento de cada sublista (genoma completo)
+
+wgs_sample = [[sublist[i] for sublist in trees] for i in range(10)] #son 10 elementos por lista
+
+for i, wgs in enumerate(wgs_sample, 1):
+	globals()[f"wgs_sample{i}"] = wgs
+        
+print("10 listas de arboles muestreados")
+print("la ultima sublista debería tener 10 elementos", len(wgs_sample_10))
+print("Pasamos a modelo glike")
+
+###Modelo de expansion basica glike
+
+def Simple_expansion(t1, N0, N1):
+    demo = glike.Demo()
+	phase = glike.Phase(0, t1, [1/N0])
+	demo.add_phase(phase) 
+	phase_expansion = glike.Phase(t1, np.inf, [1/N1]) #Is this the correct way to specify a growth rate? (Asuming 10x growth during t2?)
+	demo.add_phase(phase_expansion) 
+	return demo
+
+###Parametros a encontrar y valores iniciales
+
+names = ["t1", "N0", "N1"] #Nombrar los parametros a estimar
+values = [1000, 100000, 1000] # Asignar valores iniciales para comenzar busqueda 
+limits = [(0, 15000), (1,1000000), (1, 100000)] #Incluir limitesç
+
+search = glike.Search(names, values, limits, precision = 0.02)
+
+### Algoritmo de maxima verosimilitud para las 20 listas
+
+x1, logp = glike.estimate(wgs_sample_1, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x2, logp = glike.estimate(wgs_sample_2, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x3, logp = glike.estimate(wgs_sample_3, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x4, logp = glike.estimate(wgs_sample_4, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x5, logp = glike.estimate(wgs_sample_5, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x6, logp = glike.estimate(wgs_sample_6, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x7, logp = glike.estimate(wgs_sample_7, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x8, logp = glike.estimate(wgs_sample_8, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x9, logp = glike.estimate(wgs_sample_9, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+x10, logp = glike.estimate(wgs_sample_10, Simple_expansion, search, prune = 0.5)
+search = glike.Search(names, values, limits, precision = 0.02)
+
+
+### Escribir resultados a un archivo de salida
+with open("output.txt", "w") as file:
+    # Write the contents of the variable to the file
+    file.write(x1)
+    file.write("\n")
+    file.write(x2)
+    file.write("\n")
+    file.write(x3)
+    file.write("\n")
+    file.write(x4)
+    file.write("\n")
+    file.write(x5)
+    file.write("\n")
+    file.write(x6)
+    file.write("\n")
+    file.write(x7)
+    file.write("\n")
+    file.write(x8)
+    file.write("\n")
+    file.write(x9)
+    file.write("\n")
+    file.write(x10)
+    
+print("fin.")
+
+
+
